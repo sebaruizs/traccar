@@ -1,0 +1,65 @@
+services:
+  postgres:
+    image: timescale/timescaledb:2.31.0-pg16  # PostgreSQL 16 + TimescaleDB
+    container_name: traccar-postgres
+    command: ["postgres", "-c", "shared_preload_libraries=timescaledb",
+              "-c", "shared_buffers=6GB", "-c", "effective_cache_size=16GB", "-c", "work_mem=32MB",
+              "-c", "maintenance_work_mem=1GB", "-c", "random_page_cost=1.1", "-c", "max_parallel_workers_per_gather=4",
+              "-c", "max_worker_processes=24", "-c", "timescaledb.max_background_workers=8"]  # VM de 24 GB; antes corría con los valores por defecto (160 MB)
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: traccar
+      POSTGRES_USER: traccar
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+      # Disco lento (block volume Lower Cost de 300 GB): tablespace "archivo" con los chunks de
+      # posiciones de más de 6 meses (ver timescale/archivo.sql). Sin esto PostgreSQL no arranca.
+      - /mnt/archivo/pg-archivo:/mnt/archivo/pg-archivo
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U traccar -d traccar"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  traccar:
+    image: traccar/traccar:6.16.0   # fijada: el parche de parche/ se compila contra esta versión (antes :latest, mismo digest)
+    container_name: traccar
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      CONFIG_USE_ENVIRONMENT_VARIABLES: "true"
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+    # Parche Ridder (parche/README.md): una clase de Traccar recompilada, cargada antes que el jar
+    # original. Hace que la búsqueda de la última posición de un equipo tarde milisegundos y no 10-20 s
+    # con el historial en TimescaleDB. Al actualizar la imagen, recompilar con parche/construir.sh.
+    command: ["-cp", "/opt/traccar/ridder-traccar-parche.jar:/opt/traccar/tracker-server.jar", "org.traccar.Main", "conf/traccar.xml"]
+    volumes:
+      - ./traccar.xml:/opt/traccar/conf/traccar.xml:ro
+      - ./data/logs:/opt/traccar/logs
+      - ./web:/opt/traccar/web:ro   # web propia: se genera con ./build-web.sh
+      - ./parche/ridder-traccar-parche.jar:/opt/traccar/ridder-traccar-parche.jar:ro
+    ports:
+      # Puertos de dispositivos GPS (TCP+UDP). La web 8082 sale solo por Caddy.
+      - "5013:5013"      # H02 (Sinotrack)
+      - "5013:5013/udp"
+      - "5023:5023"      # GT06 / Concox
+      - "5023:5023/udp"
+      - "5055:5055"      # OsmAnd / Traccar Client
+      - "5055:5055/udp"
+      - "5222:5222"      # Startek (iStartek)
+      - "5222:5222/udp"
+      - "5001:5001"      # GPS103 (TK103/Coban)
+      - "5001:5001/udp"
+    networks:
+      - internal
+      - proxy
+
+networks:
+  internal:
+  proxy:
+    external: true

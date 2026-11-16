@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM 'http://java.sun.com/dtd/properties.dtd'>
+<properties>
+
+    <!-- Documentation: https://www.traccar.org/configuration-file/ -->
+    <!-- database.password se toma de la variable de entorno DATABASE_PASSWORD (.env) -->
+
+    <entry key='database.driver'>org.postgresql.Driver</entry>
+    <entry key='database.url'>jdbc:postgresql://postgres:5432/traccar</entry>
+    <entry key='database.user'>traccar</entry>
+
+    <!-- Solo los protocolos en uso -->
+    <entry key='protocols.enable'>h02,gt06,osmand,startek,gps103</entry>
+
+    <!-- Descarta posiciones en 0,0 (paquetes sin fix GPS) que inflan el odómetro -->
+    <entry key='filter.enable'>true</entry>
+    <entry key='filter.zero'>true</entry>
+    <!-- Posiciones repetidas: con la moto quieta se guarda una cada 10 minutos (skipLimit) en vez de
+         una cada ~45 s; en movimiento se guardan todas las que se alejan más de 10 m de la anterior.
+         Las que traen alarma, encendido o bloqueo se guardan siempre (el historial de bloqueos sale de ahí). -->
+    <entry key='filter.duplicate'>true</entry>
+    <entry key='filter.distance'>10</entry>
+    <entry key='filter.skipLimit'>600</entry>
+    <entry key='filter.skipAttributes'>alarm,ignition,blocked</entry>
+
+    <!-- Los gt06 mandan encendido/bloqueo/batería solo en los paquetes de estado; se copian a las
+         posiciones siguientes para que la tarjeta muestre siempre el último estado conocido -->
+    <entry key='processing.copyAttributes.enable'>true</entry>
+    <entry key='processing.copyAttributes'>ignition,blocked,batteryLevel,charge</entry>
+
+    <entry key='web.url'>https://track.ridder.com.py</entry>
+
+    <!-- Notificaciones push a la app Ridder GPS (Firebase, proyecto ridder-f7fb3). Traccar espera el CONTENIDO del JSON de la cuenta de servicio (no una ruta); copia original en secrets/ridder-f7fb3-firebase.json. Por eso traccar.xml es modo 600. -->
+<!-- Últimas posiciones: Traccar solo busca en los últimos 30 días (2592000 s). Con TimescaleDB evita recorrer
+         los chunks comprimidos (compresión a los 45 días); un equipo que no reporta hace más de 30 días no aparece
+         en el mapa hasta que vuelva a reportar. -->
+    <entry key='database.positionPeriod'>2592000</entry>
+
+    <entry key='notificator.types'>web,mail,command,firebase</entry>
+    <entry key='notificator.firebase.serviceAccount'>CAMBIAR: contenido del JSON de la cuenta de servicio de Firebase</entry>
+
+</properties>

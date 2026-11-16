@@ -1,0 +1,19 @@
+--- /tmp/claude-1000/-home-opc-apps/b54e3a6b-a4b9-4d53-ad66-00a221411725/scratchpad/DatabaseStorage.java.orig	2026-11-02 16:49:49.221214322 +0000
++++ /home/opc/apps/traccar/parche/src/org/traccar/storage/DatabaseStorage.java	2026-11-02 16:49:49.233214374 +0000
+@@ -354,7 +354,15 @@
+                         result.append("fixTime > ? AND ");
+                     }
+                 }
+-                result.append("id IN (");
++                // Parche Ridder (ver ~/apps/traccar/parche/README.md): para un solo equipo la subconsulta
++                // devuelve un valor escalar; con "id = (...)" PostgreSQL la planifica como InitPlan y
++                // TimescaleDB excluye los chunks por id (milisegundos). Con "id IN (...)" la trata como
++                // join y recorre todo el historial del equipo (10-20 s con un año de datos).
++                if (condition.getDeviceId() > 0) {
++                    result.append("id = (");
++                } else {
++                    result.append("id IN (");
++                }
+                 result.append("SELECT positionId FROM ");
+                 result.append(getStorageName(Device.class));
+                 if (condition.getDeviceId() > 0) {

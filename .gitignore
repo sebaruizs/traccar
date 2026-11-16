@@ -1,0 +1,20 @@
+# Secretos y datos: nunca se suben.
+.env
+traccar.xml
+secrets/
+backups/
+data/
+
+# Web compilada (se genera con build-web.sh a partir de web-src).
+web/
+
+# Copias de respaldo, registros y estado de las migraciones de TimescaleDB.
+timescale/*.antes-*
+timescale/*.con-parche
+timescale/*.log
+timescale/*.estado
+timescale/traccar-ensayo.xml
+
+# Node y compilados dentro del submódulo (por si se clona sin .git propio).
+web-src/node_modules/
+web-src/build/
