@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   useMediaQuery,
+  Typography,
   Select,
   MenuItem,
   FormControl,
@@ -199,9 +200,10 @@ const LoginPage = () => {
         )}
       </div>
       <div className={classes.container}>
-        {useMediaQuery(theme.breakpoints.down('lg')) && (
-          <LogoImage color={theme.palette.primary.main} />
-        )}
+        {useMediaQuery(theme.breakpoints.between('sm', 'lg')) && <LogoImage />}
+        <Typography variant="h5" component="h1">
+          {t('ridderLoginTitle')}
+        </Typography>
         {!openIdForced && (
           <>
             <TextField
@@ -213,7 +215,7 @@ const LoginPage = () => {
               autoComplete="email"
               autoFocus={!email}
               onChange={(e) => setEmail(e.target.value)}
-              helperText={failed && 'Invalid username or password'}
+              helperText={failed && t('ridderLoginFailed')}
             />
             <PasswordField
               required
@@ -240,7 +242,8 @@ const LoginPage = () => {
               onClick={handlePasswordLogin}
               type="submit"
               variant="contained"
-              color="secondary"
+              color="primary"
+              size="large"
               disabled={!email || !password || (codeEnabled && !code)}
             >
               {t('loginLogin')}

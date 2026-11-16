@@ -12,6 +12,18 @@ const localeLoaders = import.meta.glob([
   '!../../resources/l10n/en.json',
 ]);
 
+// Ridder: textos propios en resources/l10n/ridder/<idioma>.json, aplicados encima de los de Traccar.
+// Las claves nuevas (prefijo "ridder") salen de es.json para todos los idiomas.
+const ridderTexts = Object.fromEntries(
+  Object.entries(
+    import.meta.glob('../../resources/l10n/ridder/*.json', { eager: true, import: 'default' }),
+  ).map(([path, data]) => [path.match(/([\w]+)\.json$/)[1], data]),
+);
+const ridderBase = Object.fromEntries(
+  Object.entries(ridderTexts.es || {}).filter(([key]) => key.startsWith('ridder')),
+);
+const withRidder = (language, data) => ({ ...data, ...ridderBase, ...ridderTexts[language] });
+
 const dayjsLoaders = {
   af: () => import('dayjs/locale/af.js'),
   ar: () => import('dayjs/locale/ar.js'),
@@ -131,7 +143,7 @@ const languages = {
   zh_TW: { country: 'TW', name: '中文 (Taiwan)' },
 };
 
-const cache = new Map([['en', Promise.resolve({ data: en, dayjsName: 'en' })]]);
+const cache = new Map([['en', Promise.resolve({ data: withRidder('en', en), dayjsName: 'en' })]]);
 
 const loadLocale = (language) => {
   if (!cache.has(language)) {
@@ -140,7 +152,7 @@ const loadLocale = (language) => {
     cache.set(
       language,
       Promise.all([dataLoader(), dayjsLoader()]).then(([dataMod, dayjsMod]) => ({
-        data: dataMod.default,
+        data: withRidder(language, dataMod.default),
         dayjsName: dayjsMod.default.name,
       })),
     );

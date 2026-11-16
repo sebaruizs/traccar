@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 import {
   Accordion,
@@ -31,6 +32,7 @@ const DevicePage = () => {
   const t = useTranslation();
 
   const manager = useManager();
+  const groups = useSelector((state) => state.groups.items);
 
   const commonDeviceAttributes = useCommonDeviceAttributes(t);
   const deviceAttributes = useDeviceAttributes(t);
@@ -59,6 +61,46 @@ const DevicePage = () => {
 
   const validate = () => item && item.name && item.uniqueId;
 
+  // Ridder: chapa que empieza con número es moto, con letra es auto. Al crear o renombrar se ajusta
+  // el ícono, salvo que se haya elegido a mano uno distinto de moto/auto.
+  const handleNameChange = (name) => {
+    const first = name.trim().charAt(0);
+    let category = item.category;
+    if (!category || ['default', 'motorcycle', 'car'].includes(category)) {
+      if (/[0-9]/.test(first)) {
+        category = 'motorcycle';
+      } else if (/\p{L}/u.test(first)) {
+        category = 'car';
+      }
+    }
+    // Ridder: un nombre con "no funciona" pasa el equipo al grupo "No funciona" (que está archivado),
+    // guardando el grupo anterior; si se le saca, vuelve a ese grupo. Si el grupo no existe o el
+    // usuario no lo tiene asignado, se archiva el equipo solo, como respaldo.
+    const broken = /no\s*funciona/i;
+    const brokenGroup = Object.values(groups).find((group) => /^no\s*funciona$/i.test(group.name));
+    const attributes = { ...item.attributes };
+    let { groupId } = item;
+    if (broken.test(name)) {
+      if (!brokenGroup) {
+        attributes['ridder.archived'] = true;
+      } else if (groupId !== brokenGroup.id) {
+        if (groupId) {
+          attributes['ridder.previousGroupId'] = groupId;
+        }
+        groupId = brokenGroup.id;
+      }
+    } else if (broken.test(item.name || '')) {
+      if (!brokenGroup) {
+        delete attributes['ridder.archived'];
+      } else if (groupId === brokenGroup.id && attributes['ridder.previousGroupId']) {
+        // Sin grupo anterior guardado queda en "No funciona" para que no lo dejen de ver.
+        groupId = attributes['ridder.previousGroupId'];
+      }
+      delete attributes['ridder.previousGroupId'];
+    }
+    setItem({ ...item, name, category, groupId, attributes });
+  };
+
   return (
     <EditItemView
       endpoint="devices"
@@ -77,7 +119,7 @@ const DevicePage = () => {
             <AccordionDetails className={classes.details}>
               <TextField
                 value={item.name || ''}
-                onChange={(event) => setItem({ ...item, name: event.target.value })}
+                onChange={(event) => handleNameChange(event.target.value)}
                 label={t('sharedName')}
               />
               <TextField
@@ -152,6 +194,24 @@ const DevicePage = () => {
                 }
                 label={t('sharedDisabled')}
                 disabled={!manager}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={Boolean(item.attributes?.['ridder.archived'])}
+                    onChange={(event) => {
+                      const attributes = { ...item.attributes };
+                      delete attributes['ridder.archived'];
+                      setItem({
+                        ...item,
+                        attributes: event.target.checked
+                          ? { ...attributes, 'ridder.archived': true }
+                          : attributes,
+                      });
+                    }}
+                  />
+                }
+                label="Archivado (oculto en el mapa y la lista, salvo con Mostrar archivados)"
               />
               <Button variant="outlined" color="primary" onClick={() => setShowQr(true)}>
                 {t('sharedQrCode')}

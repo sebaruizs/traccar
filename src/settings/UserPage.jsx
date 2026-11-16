@@ -28,6 +28,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useDispatch, useSelector } from 'react-redux';
 import EditItemView from './components/EditItemView';
 import EditAttributesAccordion from './components/EditAttributesAccordion';
+import UserRoleAccordion from './components/UserRoleAccordion';
+import { needsEngineCheck, syncEngineAccess } from './common/userRoles';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import useUserAttributes from '../common/attributes/useUserAttributes';
 import { sessionActions } from '../store';
@@ -69,6 +71,7 @@ const UserPage = () => {
   const [deleteFailed, setDeleteFailed] = useState(false);
   const [revokeDialogOpen, setRevokeDialogOpen] = useState(false);
   const [revokeToken, setRevokeToken] = useState('');
+  const [engineAccess, setEngineAccess] = useState(null);
 
   const handleDelete = useCatch(async () => {
     if (deleteEmail === currentUser.email) {
@@ -115,9 +118,11 @@ const UserPage = () => {
     }
   }, [item, searchParams, setSearchParams, attribute]);
 
-  const onItemSaved = (result) => {
+  const onItemSaved = async (result) => {
     if (result.id === currentUser.id) {
       dispatch(sessionActions.updateUser(result));
+    } else if (admin && engineAccess !== null && needsEngineCheck(result)) {
+      await syncEngineAccess(result.id, engineAccess, t);
     }
   };
 
@@ -189,6 +194,14 @@ const UserPage = () => {
               )}
             </AccordionDetails>
           </Accordion>
+          {admin && item.id !== currentUser.id && (
+            <UserRoleAccordion
+              item={item}
+              setItem={setItem}
+              engineAccess={engineAccess}
+              setEngineAccess={setEngineAccess}
+            />
+          )}
           <Accordion>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography variant="subtitle1">{t('sharedPreferences')}</Typography>
@@ -203,7 +216,7 @@ const UserPage = () => {
                 <InputLabel>{t('mapDefault')}</InputLabel>
                 <Select
                   label={t('mapDefault')}
-                  value={item.map || 'locationIqStreets'}
+                  value={item.map || 'googleRoad'}
                   onChange={(e) => setItem({ ...item, map: e.target.value })}
                 >
                   {mapStyles

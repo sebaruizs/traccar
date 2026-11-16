@@ -84,12 +84,13 @@ const MainPage = () => {
 
   const [keyword, setKeyword] = useState('');
   const [filter, setFilter] = usePersistedState('deviceFilter', {
-    statuses: [],
     groups: [],
     geofences: [],
+    reported: 'all',
   });
   const [filterSort, setFilterSort] = usePersistedState('filterSort', '');
   const [filterMap, setFilterMap] = usePersistedState('filterMap', false);
+  const [showArchived, setShowArchived] = usePersistedState('showArchived', false);
 
   const [devicesOpen, setDevicesOpen] = useState(desktop);
   const [eventsOpen, setEventsOpen] = useState(false);
@@ -107,6 +108,7 @@ const MainPage = () => {
     filter,
     filterSort,
     filterMap,
+    showArchived,
     positions,
     setFilteredDevices,
     setFilteredPositions,
@@ -137,6 +139,8 @@ const MainPage = () => {
             setFilterSort={setFilterSort}
             filterMap={filterMap}
             setFilterMap={setFilterMap}
+            showArchived={showArchived}
+            setShowArchived={setShowArchived}
           />
         </Paper>
         <div className={classes.middle}>

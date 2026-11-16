@@ -9,17 +9,26 @@ import {
   Button,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { makeStyles } from 'tss-react/mui';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import BaseCommandView from './components/BaseCommandView';
 import PageLayout from '../common/components/PageLayout';
+import EngineControl from '../common/components/EngineControl';
 import SettingsMenu from './components/SettingsMenu';
 import { useCatch } from '../reactHelper';
 import useSettingsStyles from './common/useSettingsStyles';
 import fetchOrThrow from '../common/util/fetchOrThrow';
 
+const useStyles = makeStyles()((theme) => ({
+  engine: {
+    marginBottom: theme.spacing(2),
+  },
+}));
+
 const CommandDevicePage = () => {
   const navigate = useNavigate();
   const { classes } = useSettingsStyles();
+  const { classes: ridderClasses } = useStyles();
   const t = useTranslation();
 
   const { id } = useParams();
@@ -51,6 +60,7 @@ const CommandDevicePage = () => {
   return (
     <PageLayout menu={<SettingsMenu />} breadcrumbs={['settingsTitle', 'deviceCommand']}>
       <Container maxWidth="xs" className={classes.container}>
+        <EngineControl className={ridderClasses.engine} deviceId={id} />
         <Accordion defaultExpanded>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="subtitle1">{t('sharedRequired')}</Typography>

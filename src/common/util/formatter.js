@@ -144,8 +144,8 @@ export const getStatusColor = (status) => {
   switch (status) {
     case 'online':
       return 'success';
+    // Ridder: sin señal se muestra en gris con el "hace X" al lado; el rojo queda para alertas.
     case 'offline':
-      return 'error';
     case 'unknown':
     default:
       return 'neutral';

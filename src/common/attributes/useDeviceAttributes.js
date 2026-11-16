@@ -28,6 +28,10 @@ export default (t) =>
         name: t('sharedTimezone'),
         type: 'string',
       },
+      'ridder.homeLocation': {
+        name: t('ridderHomeLocation'),
+        type: 'string',
+      },
       'forward.url': {
         name: t('attributeForwardUrl'),
         type: 'string',

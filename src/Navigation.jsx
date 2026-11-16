@@ -61,7 +61,8 @@ const SharePage = lazy(() => import('./settings/SharePage'));
 const AnnouncementPage = lazy(() => import('./settings/AnnouncementPage'));
 const EmulatorPage = lazy(() => import('./other/EmulatorPage'));
 const StreamPage = lazy(() => import('./other/StreamPage'));
-const AuditPage = lazy(() => import('./reports/AuditPage'));
+const HistoryPage = lazy(() => import('./reports/HistoryPage'));
+const SleepCalendarPage = lazy(() => import('./other/SleepCalendarPage'));
 
 const Navigation = () => {
   const dispatch = useDispatch();
@@ -136,6 +137,7 @@ const Navigation = () => {
           <Route path="geofences" element={<GeofencesPage />} />
           <Route path="emulator" element={<EmulatorPage />} />
           <Route path="stream" element={<StreamPage />} />
+          <Route path="calendario" element={<SleepCalendarPage />} />
 
           <Route path="settings">
             <Route path=":type/:id/share" element={<SharePage />} />
@@ -190,7 +192,7 @@ const Navigation = () => {
             <Route path="trips" element={<TripReportPage />} />
             <Route path="scheduled" element={<ScheduledPage />} />
             <Route path="statistics" element={<StatisticsPage />} />
-            <Route path="audit" element={<AuditPage />} />
+            <Route path="audit" element={<HistoryPage />} />
             <Route path="logs" element={<LogsPage />} />
           </Route>
         </Route>

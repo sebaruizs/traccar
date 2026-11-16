@@ -2,7 +2,14 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import TextField from '@mui/material/TextField';
 
-import { Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material';
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Checkbox,
+  FormControlLabel,
+  Typography,
+} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import EditItemView from './components/EditItemView';
 import EditAttributesAccordion from './components/EditAttributesAccordion';
@@ -54,6 +61,24 @@ const GroupPage = () => {
                 value={item.name || ''}
                 onChange={(event) => setItem({ ...item, name: event.target.value })}
                 label={t('sharedName')}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={Boolean(item.attributes?.['ridder.archived'])}
+                    onChange={(event) => {
+                      const attributes = { ...item.attributes };
+                      delete attributes['ridder.archived'];
+                      setItem({
+                        ...item,
+                        attributes: event.target.checked
+                          ? { ...attributes, 'ridder.archived': true }
+                          : attributes,
+                      });
+                    }}
+                  />
+                }
+                label="Archivado (sus equipos se ocultan en el mapa y la lista, salvo con Mostrar archivados)"
               />
             </AccordionDetails>
           </Accordion>

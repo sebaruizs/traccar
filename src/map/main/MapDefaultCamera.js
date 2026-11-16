@@ -1,7 +1,6 @@
 import * as maplibregl from 'maplibre-gl';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { usePreference } from '../../common/util/preferences';
 import { map } from '../core/MapView';
 import { toMapCoordinates } from '../core/mapUtil';
 
@@ -9,9 +8,14 @@ const MapDefaultCamera = ({ filteredPositions }) => {
   const selectedDeviceId = useSelector((state) => state.devices.selectedId);
   const positions = useSelector((state) => state.session.positions);
 
-  const defaultLatitude = usePreference('latitude');
-  const defaultLongitude = usePreference('longitude');
-  const defaultZoom = usePreference('zoom', 0);
+  // Una cuenta sin ubicación propia (0,0) usa la del servidor como ubicación por defecto.
+  const defaultCamera = useSelector((state) => {
+    const { user, server } = state.session;
+    return user.latitude && user.longitude && !server.forceSettings ? user : server;
+  });
+  const defaultLatitude = defaultCamera.latitude;
+  const defaultLongitude = defaultCamera.longitude;
+  const defaultZoom = defaultCamera.zoom || 0;
 
   const [initialized, setInitialized] = useState(false);
 

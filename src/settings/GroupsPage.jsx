@@ -1,11 +1,14 @@
 import { useCallback, useReducer, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Table, TableRow, TableCell, TableHead, TableBody } from '@mui/material';
+import { Table, TableRow, TableCell, TableHead, TableBody, Tooltip } from '@mui/material';
+import ArchiveIcon from '@mui/icons-material/Archive';
+import UnarchiveIcon from '@mui/icons-material/Unarchive';
 import LinkIcon from '@mui/icons-material/Link';
 import PublishIcon from '@mui/icons-material/Publish';
 import ShareIcon from '@mui/icons-material/Share';
-import { useAsyncTask, useScrollToLoad, pageSize } from '../reactHelper';
+import { useAsyncTask, useCatch, useScrollToLoad, pageSize } from '../reactHelper';
+import { groupsActions } from '../store';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import PageLayout from '../common/components/PageLayout';
 import SettingsMenu from './components/SettingsMenu';
@@ -19,6 +22,7 @@ import fetchOrThrow from '../common/util/fetchOrThrow';
 
 const GroupsPage = () => {
   const { classes } = useSettingsStyles();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const t = useTranslation();
 
@@ -77,6 +81,39 @@ const GroupsPage = () => {
     handler: (groupId) => navigate(`/settings/group/${groupId}/connections`),
   };
 
+  // Ridder: archivar un grupo oculta todos sus equipos (y los de sus subgrupos) en el mapa y la lista.
+  const handleArchive = useCatch(async (item) => {
+    const attributes = { ...item.attributes };
+    const archived = Boolean(attributes['ridder.archived']);
+    delete attributes['ridder.archived'];
+    await fetchOrThrow(`/api/groups/${item.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...item,
+        attributes: archived ? attributes : { ...attributes, 'ridder.archived': true },
+      }),
+    });
+    const response = await fetchOrThrow('/api/groups');
+    dispatch(groupsActions.refresh(await response.json()));
+    reload();
+  });
+
+  const actionArchive = (item) =>
+    item.attributes?.['ridder.archived']
+      ? {
+          key: 'archive',
+          title: t('ridderDeviceUnarchive'),
+          icon: <UnarchiveIcon fontSize="small" />,
+          handler: () => handleArchive(item),
+        }
+      : {
+          key: 'archive',
+          title: t('ridderDeviceArchive'),
+          icon: <ArchiveIcon fontSize="small" />,
+          handler: () => handleArchive(item),
+        };
+
   return (
     <PageLayout menu={<SettingsMenu />} breadcrumbs={['settingsTitle', 'settingsGroups']}>
       <SearchHeader keyword={searchKeyword} setKeyword={setSearchKeyword} />
@@ -90,7 +127,18 @@ const GroupsPage = () => {
         <TableBody>
           {items.map((item) => (
             <TableRow key={item.id}>
-              <TableCell>{item.name}</TableCell>
+              <TableCell>
+                {item.name}
+                {item.attributes?.['ridder.archived'] && (
+                  <Tooltip title="Archivado">
+                    <ArchiveIcon
+                      fontSize="inherit"
+                      color="disabled"
+                      sx={{ ml: 1, verticalAlign: 'middle' }}
+                    />
+                  </Tooltip>
+                )}
+              </TableCell>
               <TableCell className={classes.columnAction} padding="none">
                 <CollectionActions
                   itemId={item.id}
@@ -98,6 +146,7 @@ const GroupsPage = () => {
                   endpoint="groups"
                   onReload={reload}
                   customActions={[
+                    actionArchive(item),
                     actionConnections,
                     ...(!limitCommands ? [actionCommand] : []),
                     ...(!shareDisabled && !user.temporary ? [actionShare] : []),

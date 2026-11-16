@@ -78,17 +78,17 @@ const MapView = ({ children }) => {
   const mapStyles = useMapStyles();
   const activeMapStyles = useAttributePreference(
     'activeMapStyles',
-    'locationIqStreets,locationIqDark,openFreeMap',
+    'googleRoad,googleSatellite,googleHybrid',
   );
   const [selectedStyleId, setSelectedStyleId] = usePersistedState(
     'selectedMapStyle',
-    usePreference('map', 'locationIqStreets'),
+    usePreference('map', 'googleRoad'),
   );
   const maxZoom = useAttributePreference('web.maxZoom');
 
   const styles = useMemo(() => {
     const filtered = mapStyles.filter((s) => s.available && activeMapStyles.includes(s.id));
-    return filtered.length ? filtered : mapStyles.filter((s) => s.id === 'osm');
+    return filtered.length ? filtered : mapStyles.filter((s) => s.id === 'googleRoad');
   }, [mapStyles, activeMapStyles]);
 
   useAsyncTask(async () => {

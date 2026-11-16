@@ -13,6 +13,7 @@ import {
   Switch,
 } from '@mui/material';
 import LinkIcon from '@mui/icons-material/Link';
+import HistoryIcon from '@mui/icons-material/History';
 import { useTheme } from '@mui/material/styles';
 import { useAsyncTask, useScrollToLoad, pageSize } from '../reactHelper';
 import { useTranslation } from '../common/components/LocalizationProvider';
@@ -23,7 +24,7 @@ import CollectionActions from './components/CollectionActions';
 import TableShimmer from '../common/components/TableShimmer';
 import SearchHeader from './components/SearchHeader';
 import { formatAddress, formatStatus, formatTime } from '../common/util/formatter';
-import { useDeviceReadonly, useManager } from '../common/util/permissions';
+import { useAdministrator, useDeviceReadonly, useManager } from '../common/util/permissions';
 import { usePreference } from '../common/util/preferences';
 import useSettingsStyles from './common/useSettingsStyles';
 import DeviceUsersValue from './components/DeviceUsersValue';
@@ -40,6 +41,7 @@ const DevicesPage = () => {
 
   const groups = useSelector((state) => state.groups.items);
 
+  const admin = useAdministrator();
   const manager = useManager();
   const deviceReadonly = useDeviceReadonly();
   const coordinateFormat = usePreference('coordinateFormat');
@@ -104,6 +106,14 @@ const DevicesPage = () => {
     handler: (deviceId) => navigate(`/settings/device/${deviceId}/connections`),
   };
 
+  // El historial de cambios solo lo ven los administradores, igual que en la tarjeta del mapa.
+  const actionHistory = {
+    key: 'history',
+    title: t('ridderDeviceHistory'),
+    icon: <HistoryIcon fontSize="small" />,
+    handler: (deviceId) => navigate(`/reports/audit?deviceId=${deviceId}`),
+  };
+
   return (
     <PageLayout menu={<SettingsMenu />} breadcrumbs={['settingsTitle', 'deviceTitle']}>
       <SearchHeader keyword={searchKeyword} setKeyword={setSearchKeyword} />
@@ -152,7 +162,7 @@ const DevicesPage = () => {
                   editPath="/settings/device"
                   endpoint="devices"
                   onReload={reload}
-                  customActions={[actionConnections]}
+                  customActions={admin ? [actionConnections, actionHistory] : [actionConnections]}
                   readonly={deviceReadonly}
                 />
               </TableCell>

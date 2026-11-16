@@ -14,6 +14,7 @@ import {
 import DescriptionIcon from '@mui/icons-material/Description';
 import SettingsIcon from '@mui/icons-material/Settings';
 import MapIcon from '@mui/icons-material/Map';
+import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import PersonIcon from '@mui/icons-material/Person';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 
@@ -46,6 +47,9 @@ const BottomMenu = () => {
     }
     if (location.pathname.startsWith('/reports')) {
       return 'reports';
+    }
+    if (location.pathname.startsWith('/calendario')) {
+      return 'calendar';
     }
     if (location.pathname === '/') {
       return 'map';
@@ -111,6 +115,11 @@ const BottomMenu = () => {
         }
         break;
       }
+      case 'calendar':
+        navigate(
+          selectedDeviceId != null ? `/calendario?deviceId=${selectedDeviceId}` : '/calendario',
+        );
+        break;
       case 'settings':
         navigate('/settings/preferences?menu=true');
         break;
@@ -142,6 +151,13 @@ const BottomMenu = () => {
             label={t('reportTitle')}
             icon={<DescriptionIcon />}
             value="reports"
+          />
+        )}
+        {!disableReports && (
+          <BottomNavigationAction
+            label={t('ridderSleepMenu')}
+            icon={<EventAvailableIcon />}
+            value="calendar"
           />
         )}
         {!readonly && (

@@ -25,6 +25,7 @@ import SearchHeader from './components/SearchHeader';
 import useSettingsStyles from './common/useSettingsStyles';
 import fetchOrThrow from '../common/util/fetchOrThrow';
 import UserDevicesValue from './components/UserDevicesValue';
+import UserRoleValue from './components/UserRoleValue';
 
 const UsersPage = () => {
   const { classes } = useSettingsStyles();
@@ -91,7 +92,7 @@ const UsersPage = () => {
           <TableRow>
             <TableCell>{t('sharedName')}</TableCell>
             <TableCell>{t('userEmail')}</TableCell>
-            <TableCell>{t('userAdmin')}</TableCell>
+            <TableCell>{t('ridderRole')}</TableCell>
             <TableCell>{t('sharedDisabled')}</TableCell>
             <TableCell>{t('userExpirationTime')}</TableCell>
             <TableCell>{t('deviceTitle')}</TableCell>
@@ -105,7 +106,9 @@ const UsersPage = () => {
               <TableRow key={item.id}>
                 <TableCell>{item.name}</TableCell>
                 <TableCell>{item.email}</TableCell>
-                <TableCell>{formatBoolean(item.administrator, t)}</TableCell>
+                <TableCell>
+                  <UserRoleValue user={item} />
+                </TableCell>
                 <TableCell>{formatBoolean(item.disabled, t)}</TableCell>
                 <TableCell>{formatTime(item.expirationTime, 'date')}</TableCell>
                 <TableCell>
